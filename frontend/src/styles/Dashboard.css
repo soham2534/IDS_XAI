@@ -1,0 +1,173 @@
+.dashboard {
+    display: flex;
+    background: #f8f9fa;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .dashboard > main {
+    flex: 1;
+    padding: 0;
+    background: #f4f6fa;
+    overflow-x: hidden;
+    margin-left: 220px; /* width of sidebar */
+    min-height: 100vh;
+    display: block;
+    box-sizing: border-box;
+  }
+  
+  h1 {
+    color: #2c5aa0;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  
+  h2 {
+    color: #2c5aa0;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  
+  .stats {
+    display: flex;
+    gap: 1rem;
+    margin: 0 0 2.5rem 0;
+    max-width: 800px;
+    margin-left: 0;
+  }
+  
+  .stat {
+    padding: 1.2rem;
+    border-radius: 10px;
+    flex: 1;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 0;
+  }
+  
+  .stat br {
+    display: block;
+    margin: 0.5rem 0;
+  }
+  
+  .red {
+    background-color: #ff7b7b;
+    color: white;
+  }
+  
+  .blue {
+    background-color: #87ceeb;
+    color: #2c5aa0;
+  }
+  
+  .yellow {
+    background-color: #fff2a8;
+    color: #d32f2f;
+  }
+  
+  table {
+    width: 100%;
+    max-width: 1000px;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  th {
+    padding: 0.8rem;
+    text-align: left;
+    background: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 14px;
+  }
+  
+  td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    color: #333;
+    font-size: 14px;
+  }
+  
+  tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .high {
+    color: #d32f2f;
+    font-weight: 600;
+  }
+  
+  .medium {
+    color: #ff9800;
+    font-weight: 600;
+  }
+  
+  .low {
+    color: #4caf50;
+    font-weight: 600;
+  }
+
+.stats, .dashboard > main > h1, .dashboard > main > h2, .dashboard > main > table, .dashboard > main > div {
+  align-self: flex-start;
+}
+
+.dashboard-content-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  padding: 3rem 3rem 2.5rem 3rem;
+  margin: 3rem 0 0 0;
+  max-width: 100%;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-content-card {
+    margin: 1rem 0 0 0;
+    padding: 1rem;
+    max-width: 100%;
+  }
+  .dashboard > main {
+    padding: 0 1rem 1rem 0;
+  }
+}
+@media (max-width: 900px) {
+  .dashboard {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
+  }
+  .stats {
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 100%;
+  }
+  .dashboard > main {
+    margin-left: 0;
+    align-items: stretch;
+  }
+  table {
+    font-size: 12px;
+    max-width: 100vw;
+    overflow-x: auto;
+    display: block;
+  }
+}
