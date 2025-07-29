@@ -92,12 +92,12 @@ body {
 }
 
 .auth-container button[type="submit"] {
-  background: #2c5aa0;
+  background: #2ca03d;
   color: white;
 }
 
 .auth-container button[type="submit"]:hover {
-  background: #1e3f73;
+  background: #1c7f39;
 }
 
 .auth-container .secondary-btn {
