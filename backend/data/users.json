@@ -1,0 +1,20 @@
+{
+  "22it115@charusat.edu.in": {
+    "password_hash": "611223c3e5e237d574bfa3591ec73d26180a7b4885b93e9d6c0d4059ee5245dc",
+    "is_verified": true,
+    "verification_token": null,
+    "created_at": "1753763496.0495481"
+  },
+  "sohamnp384@gmail.com": {
+    "password_hash": "f7eaeb1f786ede30be946ab784fcd7a1cccb45c5fc8c75f6cbb9af0d25b504de",
+    "is_verified": false,
+    "verification_token": "kArqcgHPfdF3r0oTm4mz1odgPR8yUfGHxQBeHlisPz4",
+    "created_at": "1754024191.378256"
+  },
+  "22it112@charusat.edu.in": {
+    "password_hash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    "is_verified": true,
+    "verification_token": null,
+    "created_at": "1759663845.9203818"
+  }
+}

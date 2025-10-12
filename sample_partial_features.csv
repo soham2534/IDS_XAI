@@ -1,0 +1,5 @@
+ACK Flag Cnt,Active Max,Active Mean,Dst Port,Flow Duration,Protocol
+0,0,0,80,1000,6
+1,1.5,1.2,443,2000,17
+0,0,0,22,500,6
+2,3.2,2.1,8080,3000,6

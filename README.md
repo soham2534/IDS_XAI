@@ -1,70 +1,101 @@
-# Getting Started with Create React App
+# Explainable AI IDS (Intrusion Detection System)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack Explainable AI application for Intrusion Detection System with user authentication and SHAP-based model explainability.
 
-## Available Scripts
+## Project Structure
 
-In the project directory, you can run:
+- **Frontend**: React application with authentication and dashboard
+- **Backend**: FastAPI server with ML model and user management
+- **ML Model**: XGBoost classifier for intrusion detection with SHAP explanations
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- User registration and email verification
+- Secure login/logout
+- ML model prediction with SHAP explanations
+- Real-time intrusion detection
+- Modern, responsive UI
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Prerequisites
 
-### `npm test`
+- Python 3.11+
+- Node.js 18+
+- npm or yarn
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Quick Start
 
-### `npm run build`
+### 1. Backend Setup
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Create a `.env` file in the backend directory:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```env
+# SMTP Configuration for Email Verification (Optional)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
 
-### `npm run eject`
+# Frontend URL
+FRONTEND_URL=http://localhost:3000
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# MongoDB Configuration (Optional - falls back to JSON file)
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB=xai_ids
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Start the backend server:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+python app.py
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The backend will be available at `http://localhost:8000`
 
-## Learn More
+### 2. Frontend Setup
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm install
+npm start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The frontend will be available at `http://localhost:3000`
 
-### Code Splitting
+## Usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. **Sign Up**: Create a new account with email verification
+2. **Login**: Access the dashboard with your credentials
+3. **Dashboard**: Enter feature values and get ML predictions with SHAP explanations
 
-### Analyzing the Bundle Size
+## API Endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- `POST /signup` - User registration
+- `POST /login` - User authentication
+- `POST /verify` - Email verification
+- `POST /predict` - ML model prediction
+- `GET /health` - Health check
 
-### Making a Progressive Web App
+## Model Information
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- **Algorithm**: XGBoost Classifier
+- **Features**: 78 network flow features (model requirement)
+- **Classes**: 16 attack types + Benign
+- **Explainability**: SHAP values for feature importance
+- **Partial Features**: Supports 20-30 features (missing ones filled with 0)
 
-### Advanced Configuration
+## Troubleshooting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+1. **Backend not starting**: Check Python dependencies and port availability
+2. **Frontend not connecting**: Ensure backend is running on port 8000
+3. **Email verification**: Configure SMTP settings in `.env` file
+4. **Model not loading**: Ensure `data/xgboost_model.pkl` exists
 
-### Deployment
+## Development
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Backend: FastAPI with automatic reload
+- Frontend: React with hot reload
+- Model: XGBoost with SHAP explanations
