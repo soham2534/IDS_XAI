@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 from fastapi import FastAPI, HTTPException, Request
+=======
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+>>>>>>> master
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
+<<<<<<< HEAD
+=======
+import pandas as pd
+>>>>>>> master
 import shap
 import xgboost as xgb
 import json
@@ -18,6 +26,11 @@ from pymongo import MongoClient
 from datetime import datetime
 import ssl
 import re
+<<<<<<< HEAD
+=======
+import io
+from typing import List, Dict, Any
+>>>>>>> master
 
 # Load environment variables
 load_dotenv()
@@ -43,10 +56,19 @@ try:
     db = mongo_client[MONGO_DB]
     users_collection = db['users']
     mongo_enabled = True
+<<<<<<< HEAD
     print(f"MongoDB connected: {MONGO_URI} (DB: {MONGO_DB})")
 except Exception as e:
     # Don't crash — we will fall back to JSON file
     print(f"Warning: Could not connect to MongoDB ({MONGO_URI}). Falling back to JSON. Error: {e}")
+=======
+    print(f"✅ MongoDB connected: {MONGO_URI} (DB: {MONGO_DB})")
+except Exception as e:
+    # Don't crash — we will fall back to JSON file
+    mongo_enabled = False
+    users_collection = None
+    print(f"ℹ️  MongoDB not available. Using JSON file storage. (This is normal for development)")
+>>>>>>> master
 
 
 # Initialize FastAPI app
@@ -66,6 +88,7 @@ os.makedirs("data", exist_ok=True)
 
 # Load ML model with error handling
 try:
+<<<<<<< HEAD
     model = joblib.load("data/xgboost_model.pkl")
     print("Model loaded successfully")
 except FileNotFoundError:
@@ -78,6 +101,80 @@ except Exception as e:
 # Pydantic models
 class InputData(BaseModel):
     features: list
+=======
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        model = joblib.load("data/xgboost_model.pkl")
+    print("✅ XGBoost model loaded successfully")
+except FileNotFoundError:
+    print("⚠️  Model file not found. Prediction endpoint will not work.")
+    model = None
+except Exception as e:
+    print(f"⚠️  Error loading model: {e}")
+    model = None
+
+# Load feature names for validation
+FEATURE_NAMES = []
+MODEL_EXPECTED_FEATURES = 78  # The actual model expects 78 features
+
+# Load label mapping for attack types
+LABEL_MAPPING = {}
+try:
+    with open("data/label_mapping.json", 'r') as f:
+        LABEL_MAPPING = json.load(f)
+    print(f"✅ Loaded {len(LABEL_MAPPING)} attack type labels")
+except FileNotFoundError:
+    print("⚠️  Label mapping file not found. Using default labels.")
+    LABEL_MAPPING = {
+        "Benign": 0, "Bot": 1, "Brute Force -Web": 2, "Brute Force -XSS": 3, 
+        "DDOS attack-HOIC": 4, "DDOS attack-LOIC-UDP": 5, "DDoS attacks-LOIC-HTTP": 6, 
+        "DoS attacks-GoldenEye": 7, "DoS attacks-Hulk": 8, "DoS attacks-SlowHTTPTest": 9, 
+        "DoS attacks-Slowloris": 10, "FTP-BruteForce": 11, "Infilteration": 12, 
+        "Label": 13, "SQL Injection": 14, "SSH-Bruteforce": 15
+    }
+
+# Create reverse mapping (prediction number -> attack type)
+ATTACK_TYPES = {v: k for k, v in LABEL_MAPPING.items()}
+
+def get_attack_info(prediction):
+    """Get attack type and vulnerability status from prediction number"""
+    attack_type = ATTACK_TYPES.get(prediction, f"Unknown ({prediction})")
+    is_vulnerable = prediction != 0  # 0 = Benign, everything else is an attack
+    vulnerability_status = "Attack Detected" if is_vulnerable else "Safe (Benign)"
+    
+    return {
+        "attack_type": attack_type,
+        "is_vulnerable": is_vulnerable,
+        "vulnerability_status": vulnerability_status,
+        "prediction_number": prediction
+    }
+
+try:
+    with open("data/feature_names.json", 'r') as f:
+        FEATURE_NAMES = json.load(f)
+    print(f"✅ Loaded {len(FEATURE_NAMES)} feature names from file")
+    print(f"🔧 Model expects exactly {MODEL_EXPECTED_FEATURES} features")
+    
+    # If feature names file has fewer features than model expects, extend it
+    if len(FEATURE_NAMES) < MODEL_EXPECTED_FEATURES:
+        missing_count = MODEL_EXPECTED_FEATURES - len(FEATURE_NAMES)
+        for i in range(missing_count):
+            FEATURE_NAMES.append(f"Additional_Feature_{i+1}")
+        print(f"ℹ️  Extended feature names to {len(FEATURE_NAMES)} to match model requirements")
+        
+except FileNotFoundError:
+    print("⚠️  Feature names file not found. Using default feature names.")
+    FEATURE_NAMES = [f"Feature_{i+1}" for i in range(MODEL_EXPECTED_FEATURES)]
+
+# Pydantic models
+class InputData(BaseModel):
+    features: List[float]
+
+class CSVUploadData(BaseModel):
+    rows: List[List[float]]
+    feature_names: List[str]
+>>>>>>> master
 
 class AuthData(BaseModel):
     email: str
@@ -86,6 +183,74 @@ class AuthData(BaseModel):
 class TokenData(BaseModel):
     token: str
 
+<<<<<<< HEAD
+=======
+# Helper functions for feature processing
+def preprocess_features(features: List[float], feature_names: List[str] = None) -> np.ndarray:
+    """
+    Preprocess features to handle partial input.
+    Fills missing features with default values (0.0).
+    """
+    if feature_names is None:
+        feature_names = FEATURE_NAMES
+    
+    expected_features = MODEL_EXPECTED_FEATURES  # Use the actual model requirement
+    provided_features = len(features)
+    
+    print(f"🔧 Preprocessing: {provided_features} provided, {expected_features} expected")
+    
+    # Convert to list to avoid modifying original
+    processed_features = list(features)
+    
+    if provided_features > expected_features:
+        # Truncate if more features than expected
+        processed_features = processed_features[:expected_features]
+        print(f"⚠️  Truncated {provided_features} features to {expected_features}")
+    elif provided_features < expected_features:
+        # Fill missing features with zeros
+        missing_count = expected_features - provided_features
+        processed_features.extend([0.0] * missing_count)
+        print(f"ℹ️  Filled {missing_count} missing features with default values (from {provided_features} to {expected_features})")
+    
+    print(f"🔧 Final feature count: {len(processed_features)}")
+    
+    # Ensure we have exactly the expected number of features
+    if len(processed_features) != expected_features:
+        raise ValueError(f"Feature count mismatch: expected {expected_features}, got {len(processed_features)}")
+    
+    # Convert to numpy array and reshape for model input
+    result_array = np.array(processed_features, dtype=np.float32).reshape(1, -1)
+    print(f"🔧 Final array shape: {result_array.shape}")
+    
+    return result_array
+
+def process_csv_data(csv_content: str) -> Dict[str, Any]:
+    """
+    Process CSV data and return structured data for prediction.
+    """
+    try:
+        # Read CSV from string
+        df = pd.read_csv(io.StringIO(csv_content))
+        
+        # Get feature names from CSV headers
+        csv_feature_names = df.columns.tolist()
+        
+        # Convert to numeric, filling non-numeric values with 0
+        df_numeric = df.apply(pd.to_numeric, errors='coerce').fillna(0.0)
+        
+        # Convert to list of lists (rows)
+        rows = df_numeric.values.tolist()
+        
+        return {
+            "rows": rows,
+            "feature_names": csv_feature_names,
+            "row_count": len(rows),
+            "feature_count": len(csv_feature_names)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"CSV processing error: {str(e)}")
+
+>>>>>>> master
 # User management
 USERS_FILE = 'data/users.json'  # keep as a fallback / backup
 
@@ -458,28 +623,54 @@ def verify_email(token: str):
 
 @app.post("/predict")
 def predict(data: InputData):
+<<<<<<< HEAD
     """ML prediction endpoint"""
+=======
+    """ML prediction endpoint - handles partial features"""
+>>>>>>> master
     if model is None:
         raise HTTPException(status_code=503, detail="ML model not available")
     
     try:
+<<<<<<< HEAD
         print(f"Prediction requested: features={data.features}")
+=======
+        print(f"📊 Prediction requested: {len(data.features)} features provided")
+>>>>>>> master
         
         # Validate input
         if not data.features or len(data.features) == 0:
             raise HTTPException(status_code=400, detail="Features array cannot be empty")
         
+<<<<<<< HEAD
         # Convert to numpy array
         input_array = np.array(data.features).reshape(1, -1)
+=======
+        # Convert to float if needed
+        features_float = [float(f) for f in data.features]
+        
+        # Preprocess features (handle partial input)
+        input_array = preprocess_features(features_float)
+        
+        print(f"🔧 Preprocessed array shape: {input_array.shape}")
+        print(f"🔧 Expected shape: (1, {len(FEATURE_NAMES)})")
+>>>>>>> master
         
         # Make prediction
         prediction = model.predict(input_array)[0]
         
+<<<<<<< HEAD
+=======
+        # Get attack information
+        attack_info = get_attack_info(int(prediction))
+        
+>>>>>>> master
         # Generate SHAP values for explainability
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(input_array)
         shap_top_features = np.argsort(np.abs(shap_values[0]))[::-1][:5]
         
+<<<<<<< HEAD
         result = {
             "success": True,
             "prediction": int(prediction),
@@ -494,6 +685,166 @@ def predict(data: InputData):
         print(f" Prediction error: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
+=======
+        top_features_detailed = []
+        for idx in shap_top_features:
+            top_features_detailed.append({
+            'feature_idx': int(idx),
+            'feature_name': FEATURE_NAMES[idx] if idx < len(FEATURE_NAMES) else f'F{idx+1}',
+            'feature_value': float(input_array[0, idx]),
+            'shap_value': float(shap_values[0][idx])
+        })
+
+        print(f"SHAP values type: {type(shap_values)}; shape: {np.array(shap_values).shape}")
+        result = {
+            "success": True,
+            "prediction": int(prediction),
+            "attack_type": attack_info["attack_type"],
+            "is_vulnerable": attack_info["is_vulnerable"],
+            "vulnerability_status": attack_info["vulnerability_status"],
+            "top_features": shap_top_features.tolist(),
+            "shap_values": shap_values[0].tolist(),
+            "features_used": len(data.features),
+            "features_expected": MODEL_EXPECTED_FEATURES,
+            "feature_names": FEATURE_NAMES
+        }
+        
+        print(f"✅ Prediction successful: {prediction}")
+        return result
+        
+    except Exception as e:
+        print(f"❌ Prediction error: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+@app.post("/upload-csv")
+async def upload_csv(file: UploadFile = File(...)):
+    """CSV upload endpoint for batch prediction"""
+    if model is None:
+        raise HTTPException(status_code=503, detail="ML model not available")
+    
+    try:
+        # Validate file type
+        if not file.filename.endswith('.csv'):
+            raise HTTPException(status_code=400, detail="File must be a CSV file")
+        
+        # Read CSV content
+        content = await file.read()
+        csv_content = content.decode('utf-8')
+        
+        print(f"📁 Processing CSV file: {file.filename}")
+        
+        # Process CSV data
+        csv_data = process_csv_data(csv_content)
+        
+        predictions = []
+        
+        # Process each row
+        for i, row in enumerate(csv_data["rows"]):
+            try:
+                # Convert to float and preprocess features for this row
+                row_float = [float(val) for val in row]
+                input_array = preprocess_features(row_float, csv_data["feature_names"])
+                
+                print(f"🔧 Row {i+1}: Preprocessed array shape: {input_array.shape}")
+                
+                # Make prediction
+                prediction = model.predict(input_array)[0]
+                
+                # Get attack information
+                attack_info = get_attack_info(int(prediction))
+                
+                # Generate SHAP values
+                explainer = shap.TreeExplainer(model)
+                shap_values = explainer.shap_values(input_array)
+                shap_top_features = np.argsort(np.abs(shap_values[0]))[::-1][:5]
+                
+                predictions.append({
+                    "row": i + 1,
+                    "prediction": int(prediction),
+                    "attack_type": attack_info["attack_type"],
+                    "is_vulnerable": attack_info["is_vulnerable"],
+                    "vulnerability_status": attack_info["vulnerability_status"],
+                    "top_features": shap_top_features.tolist(),
+                    "shap_values": shap_values[0].tolist(),
+                    "features_used": len(row),
+                    "features_expected": MODEL_EXPECTED_FEATURES
+                })
+                
+            except Exception as e:
+                print(f"❌ Row {i+1} error: {e}")
+                predictions.append({
+                    "row": i + 1,
+                    "error": f"Prediction failed: {str(e)}"
+                })
+        
+        result = {
+            "success": True,
+            "filename": file.filename,
+            "total_rows": csv_data["row_count"],
+            "features_in_csv": csv_data["feature_count"],
+            "features_expected": MODEL_EXPECTED_FEATURES,
+            "predictions": predictions,
+            "feature_names": FEATURE_NAMES
+        }
+        
+        print(f"✅ CSV processing completed: {csv_data['row_count']} rows processed")
+        return result
+        
+    except Exception as e:
+        print(f"❌ CSV upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"CSV processing failed: {str(e)}")
+
+@app.get("/feature-names")
+def get_feature_names():
+    """Get the list of expected feature names"""
+    return {
+        "success": True,
+        "feature_names": FEATURE_NAMES,
+        "feature_count": MODEL_EXPECTED_FEATURES
+    }
+
+@app.get("/attack-types")
+def get_attack_types():
+    """Get the list of all attack types and their mappings"""
+    return {
+        "success": True,
+        "attack_types": ATTACK_TYPES,
+        "label_mapping": LABEL_MAPPING,
+        "total_types": len(ATTACK_TYPES)
+    }
+
+@app.post("/test-preprocessing")
+def test_preprocessing(data: InputData):
+    """Test endpoint to verify feature preprocessing works correctly"""
+    try:
+        print(f"🧪 Testing preprocessing with {len(data.features)} features")
+        
+        # Convert to float if needed
+        features_float = [float(f) for f in data.features]
+        
+        # Preprocess features
+        input_array = preprocess_features(features_float)
+        
+        return {
+            "success": True,
+            "original_features": len(data.features),
+            "expected_features": MODEL_EXPECTED_FEATURES,
+            "preprocessed_shape": input_array.shape,
+            "preprocessed_features": input_array[0].tolist(),
+            "message": f"Successfully preprocessed {len(data.features)} features to {MODEL_EXPECTED_FEATURES} features"
+        }
+        
+    except Exception as e:
+        print(f"❌ Preprocessing test error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "original_features": len(data.features),
+            "expected_features": MODEL_EXPECTED_FEATURES
+        }
+
+>>>>>>> master
 # Error handlers
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
@@ -511,5 +862,12 @@ async def internal_error_handler(request: Request, exc):
 
 if __name__ == "__main__":
     import uvicorn
+<<<<<<< HEAD
     print(" Starting Explainable AI Backend...")
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+=======
+    print("🚀 Starting Explainable AI Backend...")
+    print("📊 API Documentation: http://localhost:8000/docs")
+    print("🔧 Health Check: http://localhost:8000/health")
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+>>>>>>> master
